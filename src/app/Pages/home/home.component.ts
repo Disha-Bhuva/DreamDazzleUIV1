@@ -1,36 +1,40 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { NewslatterComponent } from '../../commonComponent/newslatter/newslatter.component';
 import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { InstagramComponent } from '../../commonComponent/instagram/instagram.component';
-import { LoginServices } from '../../Services/login.services';
-import { ToastrService } from 'ngx-toastr';
+import { LoginServices, ProductReview } from '../../Services/login.services';
+import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [NewslatterComponent, InstagramComponent, SlickCarouselModule, FormsModule, CommonModule],
+  imports: [
+    NewslatterComponent,
+    InstagramComponent,
+    SlickCarouselModule,
+    FormsModule,
+    CommonModule,
+  ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   animations: [
     trigger('carouselAnimation', [
       transition('void => *', [
         style({ opacity: 0 }),
-        animate('1300ms', style({ opacity: 1 }))
+        animate('1300ms', style({ opacity: 1 })),
       ]),
-      transition('* => void', [
-        animate('1300ms', style({ opacity: 0 }))
-        
-      ])
-    ])
-  ]
-  
+      transition('* => void', [animate('1300ms', style({ opacity: 0 }))]),
+    ]),
+  ],
 })
 export class HomeComponent implements OnInit, OnDestroy {
   Allcategory: any[] = [];
+  reviews: ProductReview[] = [];
+  currentSlide = 0;
   paginatedCategories: any[] = [];
   currentPage: number = 1;
   itemsPerPage: number = 3;
@@ -40,15 +44,21 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private loginServices: LoginServices,
-    private toastr: ToastrService,
+
     private router: Router
   ) {}
 
+  toastr = inject(ToastrService);
   ngOnInit(): void {
     this.GetAll();
     this.autoScrollInterval = setInterval(() => {
       this.nextPage();
     }, 10000);
+
+    setInterval(() => {
+      this.currentSlide = (this.currentSlide + 1) % 3; // 2 reviews
+    }, 3000); // Change slide every 3 seconds
+    this.fetchReviews();
   }
 
   ngOnDestroy(): void {
@@ -61,11 +71,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.loginServices.getall().subscribe((res: any) => {
       if (res.isSuccess) {
         this.Allcategory = res.httpResponse;
-        this.totalPages = Math.ceil(this.Allcategory.length / this.itemsPerPage);
+        this.totalPages = Math.ceil(
+          this.Allcategory.length / this.itemsPerPage
+        );
         this.updatePaginatedItems();
       } else {
         this.toastr.error(res.message);
-
       }
     });
   }
@@ -94,8 +105,15 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.updatePaginatedItems();
   }
 
+  fetchReviews() {
+    this.loginServices.getAllReview().subscribe({
+      next: (res: ProductReview[]) => {
+        this.reviews = res;
+      },
+    });
+  }
+
   private scrollToCurrentPage(): void {
-    debugger
     const elementId = `page-${this.currentPage}`;
     const element = document.getElementById(elementId);
     if (element) {

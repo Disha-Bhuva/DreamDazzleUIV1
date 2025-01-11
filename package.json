@@ -17,7 +17,7 @@
     "@angular/forms": "^18.1.0",
     "@angular/platform-browser": "^18.1.0",
     "@angular/platform-browser-dynamic": "^18.1.0",
-    "@angular/router": "^18.1.0",
+    "@angular/router": "^18.2.13",
     "jquery": "^3.7.1",
     "ngx-owl-carousel-o": "^18.0.0",
     "ngx-slick-carousel": "^17.0.0",
